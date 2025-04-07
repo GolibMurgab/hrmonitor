@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Регистрация</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+
+        .registration-form {
+            background: #f4f4f4;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        #message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .error-message {
+        color: #dc3545;
+        margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="registration-form">
+    <h2>Регистрация нового пользователя</h2>
+
+    <!-- Сообщения об ошибках -->
+    <div th:if="${errorMessage}" class="error-message" th:text="${errorMessage}"></div>
+
+    <form th:action="@{/registration}" method="post" th:object="${user}">
+        <div class="form-group">
+            <label for="username">Имя пользователя:</label>
+            <input type="text" id="username" name="username" required>
+        </div>
+
+        <div class="form-group">
+            <label for="password">Пароль:</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+
+        <div class="form-group">
+            <label for="role">Роль:</label>
+            <select id="role" name="role">
+                <option value="HR">HR</option>
+                <option value="TEAM_LEAD_HR">Team Lead HR</option>
+            </select>
+        </div>
+
+        <button type="submit">Зарегистрироваться</button>
+    </form>
+
+    <div class="links">
+        <p>Уже есть аккаунт? <a th:href="@{/login}">Войдите</a></p>
+    </div>
+</div>
+
+<!--<script>-->
+<!--    function register() {-->
+<!--        const userData = {-->
+<!--            username: document.getElementById('username').value,-->
+<!--            password: document.getElementById('password').value,-->
+<!--            role: document.getElementById('role').value-->
+<!--        };-->
+
+<!--        fetch('/register', {-->
+<!--            method: 'POST',-->
+<!--            headers: {-->
+<!--                'Content-Type': 'application/json',-->
+<!--            },-->
+<!--            body: JSON.stringify(userData)-->
+<!--        })-->
+<!--        .then(response => {-->
+<!--            if (!response.ok) {-->
+<!--                return response.text().then(text => { throw new Error(text) });-->
+<!--            }-->
+<!--            return response.text();-->
+<!--        })-->
+<!--        .then(message => {-->
+<!--            showMessage(message, 'success');-->
+<!--            clearForm();-->
+<!--        })-->
+<!--        .catch(error => {-->
+<!--            showMessage(error.message || 'Ошибка регистрации', 'error');-->
+<!--        });-->
+<!--    }-->
+
+<!--    function showMessage(text, type) {-->
+<!--        const messageDiv = document.getElementById('message');-->
+<!--        messageDiv.style.display = 'block';-->
+<!--        messageDiv.className = type;-->
+<!--        messageDiv.textContent = text;-->
+<!--    }-->
+
+<!--    function clearForm() {-->
+<!--        document.getElementById('username').value = '';-->
+<!--        document.getElementById('password').value = '';-->
+<!--        document.getElementById('role').value = 'HR';-->
+<!--    }-->
+<!--</script>-->
+</body>
+</html>
