@@ -19,9 +19,9 @@ public class User {
     @Column(nullable = false)
     private Role role;
 
-//    @ManyToMany
-//    @JoinColumn(name = "teamlead", foreignKey = @ForeignKey(name = "users_id"))
-    private Long teamLead;
+    @ManyToOne
+    @JoinColumn(name = "users_id")
+    private User teamLead;
 
     public User() {
     }
@@ -58,11 +58,11 @@ public class User {
         this.role = role;
     }
 
-    public Long getTeamLead() {
+    public User getTeamLead() {
         return teamLead;
     }
 
-    public void setTeamLead(Long teamLead) {
+    public void setTeamLead(User teamLead) {
         this.teamLead = teamLead;
     }
 }

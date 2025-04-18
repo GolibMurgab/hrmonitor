@@ -99,49 +99,5 @@
         <p>Уже есть аккаунт? <a th:href="@{/login}">Войдите</a></p>
     </div>
 </div>
-
-<!--<script>-->
-<!--    function register() {-->
-<!--        const userData = {-->
-<!--            username: document.getElementById('username').value,-->
-<!--            password: document.getElementById('password').value,-->
-<!--            role: document.getElementById('role').value-->
-<!--        };-->
-
-<!--        fetch('/register', {-->
-<!--            method: 'POST',-->
-<!--            headers: {-->
-<!--                'Content-Type': 'application/json',-->
-<!--            },-->
-<!--            body: JSON.stringify(userData)-->
-<!--        })-->
-<!--        .then(response => {-->
-<!--            if (!response.ok) {-->
-<!--                return response.text().then(text => { throw new Error(text) });-->
-<!--            }-->
-<!--            return response.text();-->
-<!--        })-->
-<!--        .then(message => {-->
-<!--            showMessage(message, 'success');-->
-<!--            clearForm();-->
-<!--        })-->
-<!--        .catch(error => {-->
-<!--            showMessage(error.message || 'Ошибка регистрации', 'error');-->
-<!--        });-->
-<!--    }-->
-
-<!--    function showMessage(text, type) {-->
-<!--        const messageDiv = document.getElementById('message');-->
-<!--        messageDiv.style.display = 'block';-->
-<!--        messageDiv.className = type;-->
-<!--        messageDiv.textContent = text;-->
-<!--    }-->
-
-<!--    function clearForm() {-->
-<!--        document.getElementById('username').value = '';-->
-<!--        document.getElementById('password').value = '';-->
-<!--        document.getElementById('role').value = 'HR';-->
-<!--    }-->
-<!--</script>-->
 </body>
 </html>

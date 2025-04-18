@@ -36,7 +36,6 @@ public class UserServiceImpl implements UserService{
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Optional<User> userObject = this.userRepository.findByUsername(username);
-        System.out.println("я тут");
         if(userObject.isEmpty()) throw new UsernameNotFoundException(username);
         return this.mapUserDetails(userObject.get());
     }

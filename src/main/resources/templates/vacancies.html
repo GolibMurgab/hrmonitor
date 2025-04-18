@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Вакансии</title>
+    <style>
+        /* Основные стили */
+        body {
+            font-family: Arial;
+            margin: 0;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Навигационная панель */
+        .sidebar {
+            width: 250px;
+            background: #2c3e50;
+            padding: 20px;
+            color: white;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            display: block;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+
+        .nav-link:hover {
+            background: #34495e;
+        }
+
+        /* Основной контент */
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Формы и элементы */
+        form {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .edit-btn {
+            background: #3498db;
+            color: white;
+        }
+
+        .delete-btn {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .error-message {
+            color: #dc3545;
+            margin-top: 10px;
+        }
+
+        /* Модальное окно */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            margin: 15% auto;
+            width: 50%;
+            border-radius: 8px;
+        }
+
+        .vacancy-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .vacancy-info {
+            flex: 1;
+            margin-right: 20px;
+        }
+
+        .vacancy-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+<!-- Навигационная панель -->
+<nav class="sidebar">
+    <h2>Меню</h2>
+    <a th:href="@{/team-lead-hr/dashboard}" class="nav-link">Мои Hr</a>
+    <a th:href="@{/team-lead-hr/statistics}" class="nav-link">Статистика</a>
+    <a th:href="@{/team-lead-hr/vacancies}" class="nav-link">Вакансии</a>
+</nav>
+
+<!-- Основной контент -->
+<div class="main-content">
+    <!-- Форма создания -->
+    <h2>Создать новую вакансию</h2>
+    <form th:action="@{/team-lead-hr/vacancies/add}" method="post" th:object="${vacancyDto}">
+        <input type="hidden" th:field="*{id}">
+        <input type="text" th:field="*{title}" placeholder="Должность" required>
+        <input type="text" th:field="*{skills}" placeholder="Навыки" required>
+        <textarea th:field="*{description}" placeholder="Описание"></textarea>
+        <button type="submit">Опубликовать</button>
+    </form>
+
+    <div th:if="${param.error}" class="error-message">
+        Ошибка, попробуйте снова
+    </div>
+
+    <!-- Список вакансий -->
+    <h2>Существующие вакансии</h2>
+    <div th:each="vacancy : ${vacancies}" class="vacancy-item">
+        <div class="vacancy-container">
+            <div class="vacancy-info">
+                <h3 th:text="${vacancy.title}"></h3>
+                <p><strong>Навыки:</strong> <span th:text="${vacancy.skills}"></span></p>
+                <p th:text="${vacancy.description}"></p>
+            </div>
+
+            <div class="vacancy-actions">
+                <button class="edit-btn"
+                        th:attr="data-id=${vacancy.id},
+                 data-title=${vacancy.title},
+                 data-skills=${vacancy.skills},
+                 data-description=${vacancy.description}"
+                        onclick="handleEditClick(this)">
+                    Редактировать
+                </button>
+
+
+                <form th:action="@{/team-lead-hr/vacancies/{id}(id=${vacancy.id})}" method="post" style="display: inline-block; margin: 0;">
+                    <input type="hidden" name="_method" value="DELETE">
+                    <button type="submit" class="delete-btn">Удалить</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно редактирования -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <h2>Редактировать вакансию</h2>
+        <form id="editForm" method="post" th:object="${vacancyDto}">
+            <input type="hidden" name="_method" value="PUT">
+            <input type="hidden" name="id" id="editId" th:field="*{id}">
+
+            <input type="text" name="title" id="editTitle" th:field="*{title}" placeholder="Должность" required>
+            <input type="text" name="skills" id="editSkills" th:field="*{skills}" placeholder="Навыки" required>
+            <textarea name="description" id="editDescription" th:field="*{description}" placeholder="Описание"></textarea>
+
+            <button type="submit">Сохранить</button>
+            <button type="button" onclick="closeEditModal()">Отмена</button>
+        </form>
+
+    </div>
+</div>
+
+<script>
+    function handleEditClick(button) {
+        const id = button.getAttribute('data-id');
+        const title = button.getAttribute('data-title');
+        const skills = button.getAttribute('data-skills');
+        const description = button.getAttribute('data-description');
+
+        openEditModal(id, title, skills, description);
+    }
+
+    function openEditModal(id, title, skills, description) {
+        document.getElementById('editId').value = id;
+        document.getElementById('editTitle').value = title;
+        document.getElementById('editSkills').value = skills;
+        document.getElementById('editDescription').value = description;
+        document.getElementById('editModal').style.display = 'block';
+        document.getElementById('editForm').action = `/team-lead-hr/vacancies/${id}`;
+    }
+
+    function closeEditModal() {
+        document.getElementById('editModal').style.display = 'none';
+    }
+</script>
+
+</body>
+</html>
