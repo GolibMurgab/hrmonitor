@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Вакансии</title>
+    <style>
+        /* Основные стили */
+        body {
+            font-family: Arial;
+            margin: 0;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Навигационная панель */
+        .sidebar {
+            width: 250px;
+            background: #2c3e50;
+            padding: 20px;
+            color: white;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            display: block;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+
+        .nav-link:hover {
+            background: #34495e;
+        }
+
+        /* Основной контент */
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Формы и элементы */
+        form {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .edit-btn { background: #3498db; color: white; }
+        .delete-btn { background: #e74c3c; color: white; }
+        .assign-btn { background: #2ecc71; color: white; }
+        .error-message { color: #dc3545; margin-top: 10px; }
+
+        /* Модальное окно */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            margin: 15% auto;
+            width: 50%;
+            border-radius: 8px;
+        }
+
+        .vacancy-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .vacancy-info { flex: 1; margin-right: 20px; }
+        .vacancy-actions { display: flex; flex-direction: column; gap: 10px; }
+
+        .resume-list {
+            margin-top: 30px;
+        }
+
+        .resume-item {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .resume-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .resume-meta {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .resume-stage {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .sla-status {
+            margin-top: 8px;
+            font-size: 0.9em;
+            padding: 4px;
+            border-radius: 4px;
+            background: #f5f5f5;
+        }
+        .stage-open { background: #f1c40f; color: #000; }
+        .stage-offer { background: #2ecc71; color: #fff; }
+        .stage-default { background: #3498db; color: #fff; }
+    </style>
+</head>
+<body>
+<nav class="sidebar">
+    <h2>Меню</h2>
+    <a th:href="@{/hr/resume}" class="nav-link">Резюме</a>
+    <a th:href="@{/hr/statistics}" class="nav-link">Статистика</a>
+    <a th:href="@{/hr/vacancies}" class="nav-link">Вакансии</a>
+    <a th:href="@{/logout}" class="nav-link">Выйти</a>
+</nav>
+
+<div class="main-content">
+    <h2>Добавить новое резюме</h2>
+    <form th:action="@{/hr/resume/add}" method="post" th:object="${resumeDto}">
+        <input type="hidden" th:field="*{id}">
+        <div class="form-group">
+            <label>Вакансия:</label>
+            <select th:field="*{vacancyId}" class="form-control" required>
+                <option value="" disabled selected>Выберите вакансию</option>
+                <option th:each="vacancy : ${vacancies}"
+                        th:value="${vacancy.id}"
+                        th:text="${vacancy.title}"></option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <input type="text" th:field="*{candidateName}" placeholder="Имя кандидата" required>
+        </div>
+
+        <div class="form-group">
+            <input type="text" th:field="*{source}" placeholder="Источник" required>
+        </div>
+
+        <div class="form-group">
+            <input type="text" th:field="*{link}" placeholder="Url">
+        </div>
+
+        <button type="submit" class="btn btn-primary">Опубликовать</button>
+    </form>
+
+    <div th:if="${param.error}" class="error-message">Ошибка, попробуйте снова</div>
+
+<!--    Списоке с резюме-->
+    <div class="resume-list">
+        <h2>Список резюме</h2>
+
+        <div th:each="resume : ${resumes}" class="resume-item">
+            <div class="resume-header">
+                <h3 th:text="${resume.candidateName}">Имя кандидата</h3>
+                <span class="resume-stage"
+                      th:text="${#strings.capitalize(#strings.replace(resume.currentStage.stage.name(), '_', ' ').toLowerCase())}"
+                      th:classappend="${resume.currentStage.stage.name() == 'OPEN'} ? 'stage-open' :
+                          (${resume.currentStage.stage.name() == 'OFFER'} ? 'stage-offer' :
+                          'stage-default')">
+                </span>
+            </div>
+
+            <div class="resume-meta">
+                <div>Источник: <span th:text="${resume.source}"></span></div>
+                <div>Дата создания:
+                    <span th:text="${#temporals.format(resume.created, 'dd.MM.yyyy HH:mm')}"></span>
+                </div>
+                <div>Вакансия: <span th:text="${resume.vacancy.title}"></span></div>
+            </div>
+
+            <div class="sla-status"
+                 th:style="${resume.slaTimeDisplay.startsWith('Осталось')} ?
+               'color: green' :
+               (${resume.slaTimeDisplay.startsWith('Просрочено')} ? 'color: red' : 'color: gray')">
+                <span th:text="${resume.slaTimeDisplay}"></span>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

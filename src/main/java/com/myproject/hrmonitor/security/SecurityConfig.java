@@ -72,7 +72,7 @@
                         .anyMatch(a -> a.getAuthority().equals("ROLE_TEAM_LEAD_HR"))){
                     response.sendRedirect("/team-lead-hr/dashboard");
                 } else {
-                    response.sendRedirect("hr/dashboard");
+                    response.sendRedirect("hr/resume");
                 }
             };
         }

@@ -1,6 +1,7 @@
 package com.myproject.hrmonitor.controller;
 
 import com.myproject.hrmonitor.dto.VacancyDto;
+import com.myproject.hrmonitor.service.UserServiceImpl;
 import com.myproject.hrmonitor.service.VacancyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -15,6 +16,9 @@ public class VacancyController {
     @Autowired
     private VacancyService vacancyService;
 
+    @Autowired
+    private UserServiceImpl userService;
+
 
     @GetMapping()
     public String showVacancies(@RequestParam(value = "error", required = false) boolean error,
@@ -23,6 +27,7 @@ public class VacancyController {
         model.addAttribute("vacancyDto", new VacancyDto());
         model.addAttribute("vacancies",
                 (vacancyService.getAllVacanciesDto(authentication.getName())));
+        model.addAttribute("hrs", vacancyService.loadAllTeamLeadHr(authentication.getName()));
         return "vacancies";
     }
 
@@ -31,6 +36,13 @@ public class VacancyController {
                                 Authentication authentication) {
         vacancyService.createVacancy(vacancy, authentication.getName());
 
+        return "redirect:/team-lead-hr/vacancies";
+    }
+
+    @PostMapping("/assign-hr")
+    public String addHrToVacancy(@RequestParam("vacancyId") Long vacancyId,
+                                 @RequestParam("hrId") Long hrId){
+        vacancyService.addHr(vacancyId, hrId);
         return "redirect:/team-lead-hr/vacancies";
     }
 

@@ -1,6 +1,7 @@
 package com.myproject.hrmonitor.service;
 
 import com.myproject.hrmonitor.dto.VacancyDto;
+import com.myproject.hrmonitor.entity.Role;
 import com.myproject.hrmonitor.entity.User;
 import com.myproject.hrmonitor.entity.Vacancy;
 import com.myproject.hrmonitor.repository.UserRepository;
@@ -65,5 +66,23 @@ public class VacancyService {
             return vacancyRepository.findAllByTeamLead(userOpt.get());
         }
         return new ArrayList<Vacancy>();
+    }
+
+    public List<User> loadAllTeamLeadHr(String teamLeadUsername){
+        Optional<User> userOpt = userRepository.findByUsername(teamLeadUsername);
+        if(userOpt.isPresent()){
+            return userRepository.findAllByTeamLeadAndRole(userOpt.get(), Role.HR);
+        }
+        return new ArrayList<User>();
+    }
+
+    public void addHr(Long vacancyId, Long hrId) {
+        Optional<Vacancy> vacancyOpt = vacancyRepository.findById(vacancyId);
+        Optional<User> hrOpt = userRepository.findById(hrId);
+        if(vacancyOpt.isPresent() && hrOpt.isPresent()){
+            Vacancy vacancy = vacancyOpt.get();
+            vacancy.setHr(hrOpt.get());
+            vacancyRepository.save(vacancy);
+        }
     }
 }

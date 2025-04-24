@@ -1,5 +1,7 @@
 package com.myproject.hrmonitor.entity;
 
+import jakarta.persistence.Entity;
+
 public enum Stage {
     OPEN,
     REVIEWED,

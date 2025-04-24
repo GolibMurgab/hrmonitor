@@ -49,7 +49,7 @@
             margin-bottom: 20px;
         }
 
-        input, textarea {
+        input, textarea, select {
             width: 100%;
             padding: 8px;
             margin: 5px 0;
@@ -65,20 +65,10 @@
             margin: 5px;
         }
 
-        .edit-btn {
-            background: #3498db;
-            color: white;
-        }
-
-        .delete-btn {
-            background: #e74c3c;
-            color: white;
-        }
-
-        .error-message {
-            color: #dc3545;
-            margin-top: 10px;
-        }
+        .edit-btn { background: #3498db; color: white; }
+        .delete-btn { background: #e74c3c; color: white; }
+        .assign-btn { background: #2ecc71; color: white; }
+        .error-message { color: #dc3545; margin-top: 10px; }
 
         /* Модальное окно */
         .modal {
@@ -89,6 +79,7 @@
             width: 100%;
             height: 100%;
             background: rgba(0,0,0,0.5);
+            z-index: 1000;
         }
 
         .modal-content {
@@ -110,30 +101,21 @@
             border: 1px solid #ddd;
         }
 
-        .vacancy-info {
-            flex: 1;
-            margin-right: 20px;
-        }
-
-        .vacancy-actions {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
+        .vacancy-info { flex: 1; margin-right: 20px; }
+        .vacancy-actions { display: flex; flex-direction: column; gap: 10px; }
     </style>
 </head>
 <body>
-<!-- Навигационная панель -->
 <nav class="sidebar">
     <h2>Меню</h2>
     <a th:href="@{/team-lead-hr/dashboard}" class="nav-link">Мои Hr</a>
+    <a th:href="@{/team-lead-hr/sla}" class="nav-link">Настройки SLA</a>
     <a th:href="@{/team-lead-hr/statistics}" class="nav-link">Статистика</a>
     <a th:href="@{/team-lead-hr/vacancies}" class="nav-link">Вакансии</a>
+    <a th:href="@{/logout}" class="nav-link">Выйти</a>
 </nav>
 
-<!-- Основной контент -->
 <div class="main-content">
-    <!-- Форма создания -->
     <h2>Создать новую вакансию</h2>
     <form th:action="@{/team-lead-hr/vacancies/add}" method="post" th:object="${vacancyDto}">
         <input type="hidden" th:field="*{id}">
@@ -143,56 +125,61 @@
         <button type="submit">Опубликовать</button>
     </form>
 
-    <div th:if="${param.error}" class="error-message">
-        Ошибка, попробуйте снова
-    </div>
+    <div th:if="${param.error}" class="error-message">Ошибка, попробуйте снова</div>
 
-    <!-- Список вакансий -->
     <h2>Существующие вакансии</h2>
     <div th:each="vacancy : ${vacancies}" class="vacancy-item">
         <div class="vacancy-container">
             <div class="vacancy-info">
                 <h3 th:text="${vacancy.title}"></h3>
                 <p><strong>Навыки:</strong> <span th:text="${vacancy.skills}"></span></p>
-                <p th:text="${vacancy.description}"></p>
+                <p><strong>Описание:</strong> <span th:text="${vacancy.description}"></span></p>
+                <p><strong>Hr:</strong>
+                    <span th:if="${vacancy.hr != null}" th:text="${vacancy.hr.username}"></span>
+                    <span th:unless="${vacancy.hr != null}">Не назначен</span>
+                </p>
             </div>
-
             <div class="vacancy-actions">
+                <!-- Редактировать -->
                 <button class="edit-btn"
-                        th:attr="data-id=${vacancy.id},
-                 data-title=${vacancy.title},
-                 data-skills=${vacancy.skills},
-                 data-description=${vacancy.description}"
-                        onclick="handleEditClick(this)">
-                    Редактировать
-                </button>
+                        th:attr="data-id=${vacancy.id}, data-title=${vacancy.title}, data-skills=${vacancy.skills}, data-description=${vacancy.description}"
+                        onclick="handleEditClick(this)">Редактировать</button>
 
-
-                <form th:action="@{/team-lead-hr/vacancies/{id}(id=${vacancy.id})}" method="post" style="display: inline-block; margin: 0;">
-                    <input type="hidden" name="_method" value="DELETE">
+                <!-- Удалить -->
+                <form th:action="@{/team-lead-hr/vacancies/{id}(id=${vacancy.id})}" method="post" style="display:inline-block; margin:0;">
+                    <input type="hidden" name="_method" value="DELETE" />
                     <button type="submit" class="delete-btn">Удалить</button>
+                </form>
+
+
+                <form th:action="@{/team-lead-hr/vacancies/assign-hr}" method="post" style="display:inline-block; margin:0;">
+                    <input type="hidden" name="vacancyId" th:value="${vacancy.id}">
+                    <select name="hrId" required>
+                        <option value="" disabled selected>Выберите HR</option>
+                        <option th:each="hr : ${hrs}" th:value="${hr.id}" th:text="${hr.username}"></option>
+                    </select>
+                    <button type="submit" class="assign-btn">Назначить HR</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Модальное окно редактирования -->
+<!-- Модалка редактирования -->
 <div id="editModal" class="modal">
     <div class="modal-content">
         <h2>Редактировать вакансию</h2>
         <form id="editForm" method="post" th:object="${vacancyDto}">
-            <input type="hidden" name="_method" value="PUT">
-            <input type="hidden" name="id" id="editId" th:field="*{id}">
+            <input type="hidden" name="_method" value="PUT" />
+            <input type="hidden" name="id" id="editId" th:field="*{id}" />
 
-            <input type="text" name="title" id="editTitle" th:field="*{title}" placeholder="Должность" required>
-            <input type="text" name="skills" id="editSkills" th:field="*{skills}" placeholder="Навыки" required>
+            <input type="text" name="title" id="editTitle" th:field="*{title}" placeholder="Должность" required />
+            <input type="text" name="skills" id="editSkills" th:field="*{skills}" placeholder="Навыки" required />
             <textarea name="description" id="editDescription" th:field="*{description}" placeholder="Описание"></textarea>
 
             <button type="submit">Сохранить</button>
             <button type="button" onclick="closeEditModal()">Отмена</button>
         </form>
-
     </div>
 </div>
 
@@ -202,10 +189,8 @@
         const title = button.getAttribute('data-title');
         const skills = button.getAttribute('data-skills');
         const description = button.getAttribute('data-description');
-
         openEditModal(id, title, skills, description);
     }
-
     function openEditModal(id, title, skills, description) {
         document.getElementById('editId').value = id;
         document.getElementById('editTitle').value = title;
@@ -214,7 +199,6 @@
         document.getElementById('editModal').style.display = 'block';
         document.getElementById('editForm').action = `/team-lead-hr/vacancies/${id}`;
     }
-
     function closeEditModal() {
         document.getElementById('editModal').style.display = 'none';
     }

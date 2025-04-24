@@ -8,4 +8,6 @@ import java.util.List;
 
 public interface VacancyRepository extends JpaRepository<Vacancy, Long> {
     List<Vacancy> findAllByTeamLead(User teamLead);
+    List<Vacancy> findAllByHr(User hr);
+
 }
