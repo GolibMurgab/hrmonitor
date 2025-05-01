@@ -115,24 +115,22 @@
             padding: 20px;
             margin-bottom: 15px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .resume-content {
+            flex: 1;
+            margin-right: 20px;
         }
 
         .resume-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
             margin-bottom: 15px;
         }
 
         .resume-meta {
             color: #666;
             font-size: 0.9em;
-        }
-
-        .resume-stage {
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-weight: bold;
         }
 
         .sla-status {
@@ -142,9 +140,54 @@
             border-radius: 4px;
             background: #f5f5f5;
         }
-        .stage-open { background: #f1c40f; color: #000; }
-        .stage-offer { background: #2ecc71; color: #fff; }
-        .stage-default { background: #3498db; color: #fff; }
+        .stage-open { background: #f1c40f; color: #000; } /* Желтый */
+        .stage-reviewed { background: #e67e22; color: #fff; } /* Оранжевый */
+        .stage-interview { background: #3498db; color: #fff; } /* Синий */
+        .stage-interview-passed { background: #27ae60; color: #fff; } /* Зеленый */
+        .stage-technical-interview { background: #9b59b6; color: #fff; } /* Фиолетовый */
+        .stage-technical-interview-passed { background: #1abc9c; color: #fff; } /* Бирюзовый */
+        .stage-offer { background: #2ecc71; color: #fff; } /* Ярко-зеленый */
+
+        .resume-stage {
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            width: 100%;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .stage-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 200px;
+            width: auto;
+            align-items: stretch;
+            max-width: 300px;
+        }
+
+        .stage-container form {
+            width: 100%;
+            margin: 0; /* Убираем отступы формы */
+            padding: 0;
+            display: flex;
+            justify-content: normal;
+        }
+
+        .assign-btn {
+            padding: 8px 12px;
+            width: 100%;
+            box-sizing: border-box;
+            display: block; /* Добавлено вместо flex-свойств */
+            background: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -187,34 +230,45 @@
 
     <div th:if="${param.error}" class="error-message">Ошибка, попробуйте снова</div>
 
-<!--    Списоке с резюме-->
+    <!--    Списоке с резюме-->
     <div class="resume-list">
         <h2>Список резюме</h2>
 
         <div th:each="resume : ${resumes}" class="resume-item">
-            <div class="resume-header">
-                <h3 th:text="${resume.candidateName}">Имя кандидата</h3>
+            <div class="resume-content">
+                <div class="resume-header">
+                    <h3 th:text="${resume.candidateName}">Имя кандидата</h3>
+                </div>
+
+                <div class="resume-meta">
+                    <div>Источник: <span th:text="${resume.source}"></span></div>
+                    <div>Дата создания:
+                        <span th:text="${#temporals.format(resume.created, 'dd.MM.yyyy HH:mm')}"></span>
+                    </div>
+                    <div>Вакансия: <span th:text="${resume.vacancy.title}"></span></div>
+                </div>
+
+                <div class="sla-status"
+                     th:style="${resume.slaTimeDisplay.startsWith('Осталось')} ?
+                   'color: green' :
+                   (${resume.slaTimeDisplay.startsWith('Просрочено')} ? 'color: red' : 'color: gray')">
+                    <span th:text="${resume.slaTimeDisplay}"></span>
+                </div>
+            </div>
+
+            <div class="stage-container">
                 <span class="resume-stage"
                       th:text="${#strings.capitalize(#strings.replace(resume.currentStage.stage.name(), '_', ' ').toLowerCase())}"
-                      th:classappend="${resume.currentStage.stage.name() == 'OPEN'} ? 'stage-open' :
-                          (${resume.currentStage.stage.name() == 'OFFER'} ? 'stage-offer' :
-                          'stage-default')">
+                      th:classappend="'stage-' + ${#strings.toLowerCase(#strings.replace(resume.currentStage.stage.name(), '_', '-'))}">
                 </span>
-            </div>
-
-            <div class="resume-meta">
-                <div>Источник: <span th:text="${resume.source}"></span></div>
-                <div>Дата создания:
-                    <span th:text="${#temporals.format(resume.created, 'dd.MM.yyyy HH:mm')}"></span>
-                </div>
-                <div>Вакансия: <span th:text="${resume.vacancy.title}"></span></div>
-            </div>
-
-            <div class="sla-status"
-                 th:style="${resume.slaTimeDisplay.startsWith('Осталось')} ?
-               'color: green' :
-               (${resume.slaTimeDisplay.startsWith('Просрочено')} ? 'color: red' : 'color: gray')">
-                <span th:text="${resume.slaTimeDisplay}"></span>
+                <form th:action="@{/hr/resume/{id}/next-stage(id=${resume.id})}" method="post">
+                    <button type="submit" class="assign-btn"
+                            th:if="${resume.currentStage.stage.next() != null}"
+                            th:text="'Перейти в ' + ${#strings.replace(
+                                resume.currentStage.stage.next().name(),
+                                        '_', ' ').toLowerCase()}">
+                    </button>
+                </form>
             </div>
         </div>
     </div>

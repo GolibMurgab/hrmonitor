@@ -35,4 +35,10 @@ public class ResumeController {
         resumeService.save(resumeDto, authentication.getName());
         return "redirect:/hr/resume";
     }
+
+    @PostMapping("/{id}/next-stage")
+    public String changeStage(@PathVariable Long id){
+        resumeService.changeStage(id);
+        return "redirect:/hr/resume";
+    }
 }

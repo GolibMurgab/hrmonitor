@@ -61,13 +61,7 @@ public class ResumeService {
         }
     }
 
-    public List<Resume> getResumes(String hrUsername){
-        Optional<User> hrOpt = userRepository.findByUsername(hrUsername);
-        List<Resume> resumes = new ArrayList<>();
-        if(hrOpt.isPresent()){
-            resumes = resumeRepository.findAllByHr(hrOpt.get());
-        }
-
+    public void setResumeDuration(List<Resume> resumes){
         resumes.forEach(resume -> {
             StageHistory currentStage = resume.getCurrentStage();
             Optional<SLA> sla = slaRepository.findById(currentStage.getStage());
@@ -96,7 +90,33 @@ public class ResumeService {
                 resume.setSlaTimeDisplay("SLA не настроено");
             }
         });
+    }
 
+    public List<Resume> getResumes(String hrUsername){
+        Optional<User> hrOpt = userRepository.findByUsername(hrUsername);
+        List<Resume> resumes = new ArrayList<>();
+        if(hrOpt.isPresent()){
+            resumes = resumeRepository.findAllByHr(hrOpt.get());
+            this.setResumeDuration(resumes);
+        }
         return resumes;
+    }
+
+    public void changeStage(Long id) {
+        Optional<Resume> resumeOpt = resumeRepository.findById(id);
+        if(resumeOpt.isPresent()){
+            Resume resume = resumeOpt.get();
+            Stage stage = resume.getCurrentStage().getStage().next();
+            if(stage != null){
+                LocalDateTime currentTime = LocalDateTime.now();
+                StageHistory stageHistory = new StageHistory();
+                stageHistory.setStage(stage);
+                stageHistory.setStart(currentTime);
+                stageHistory = stageHistoryRepository.save(stageHistory);
+
+                resume.setCurrentStage(stageHistory);
+                resumeRepository.save(resume);
+            }
+        }
     }
 }
