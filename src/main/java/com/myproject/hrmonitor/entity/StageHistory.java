@@ -12,8 +12,9 @@ public class StageHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Enumerated(EnumType.STRING)
-    private Stage stage;
+    @ManyToOne
+    @JoinColumn(name = "stage", referencedColumnName = "stage")
+    private SLA sla;
 
     private Long resumeId;
 

@@ -54,10 +54,7 @@ public class VacancyService {
         }
     }
     public void delete(Long id) {
-        Optional<Vacancy> vacancyOpt = vacancyRepository.findById(id);
-        if(vacancyOpt.isPresent()){
-            vacancyRepository.delete(vacancyOpt.get());
-        }
+        vacancyRepository.deleteById(id);
     }
 
     public List<Vacancy> getAllVacanciesDto(String teamLeadUsername) {

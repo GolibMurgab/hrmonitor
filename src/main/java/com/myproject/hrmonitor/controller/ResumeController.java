@@ -1,6 +1,8 @@
 package com.myproject.hrmonitor.controller;
 
 import com.myproject.hrmonitor.dto.ResumeDto;
+import com.myproject.hrmonitor.dto.VacancyDto;
+import com.myproject.hrmonitor.entity.Stage;
 import com.myproject.hrmonitor.service.HrService;
 import com.myproject.hrmonitor.service.ResumeService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,11 +23,14 @@ public class ResumeController {
 
     @GetMapping
     public String getResume(Model model,
-                            Authentication authentication){
-        model.addAttribute("vacancies",
-                (resumeService.getAllVacancies(authentication.getName())));
+                            @RequestParam(required = false) Stage stage,
+                            @RequestParam(required = false) Long vacancyId,
+                            @RequestParam(defaultValue = "created-desc") String sortBy,
+                            Authentication authentication) {
+        model.addAttribute("vacancies", resumeService.getAllVacancies(authentication.getName()));
         model.addAttribute("resumeDto", new ResumeDto());
-        model.addAttribute("resumes", resumeService.getResumes(authentication.getName()));
+        model.addAttribute("resumes",
+                resumeService.getResumesFiltered(authentication.getName(), stage, vacancyId, sortBy));
         return "myresume";
     }
 
@@ -39,6 +44,19 @@ public class ResumeController {
     @PostMapping("/{id}/next-stage")
     public String changeStage(@PathVariable Long id){
         resumeService.changeStage(id);
+        return "redirect:/hr/resume";
+    }
+
+    @PutMapping("/{id}")
+    public String editResume(@PathVariable Long id,
+                      @ModelAttribute ResumeDto resumeDto){
+        resumeService.editResume(id, resumeDto);
+        return "redirect:/hr/resume";
+    }
+
+    @DeleteMapping("/{id}")
+    public String deleteVacancy(@PathVariable Long id){
+        resumeService.deleteResume(id);
         return "redirect:/hr/resume";
     }
 }

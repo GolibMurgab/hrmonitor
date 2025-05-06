@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Статистика</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Используем стили из предыдущего шаблона */
+        .chart-container {
+            width: 600px;
+            height: 400px;
+            margin: 20px auto;
+        }
+        .stats-block {
+            background: #fff;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+<nav class="sidebar">
+    <!-- Боковая панель как в предыдущем шаблоне -->
+    <a th:href="@{/hr/resume}" class="nav-link">Резюме</a>
+    <a th:href="@{/hr/statistics}" class="nav-link">Статистика</a>
+    <a th:href="@{/hr/vacancies}" class="nav-link">Вакансии</a>
+    <a th:href="@{/logout}" class="nav-link">Выйти</a>
+</nav>
+
+<div class="main-content">
+    <h1>Статистика</h1>
+
+    <!-- Средние значения -->
+    <div class="stats-block">
+        <h3>Общая статистика</h3>
+        <p>Среднее кандидатов на вакансию:
+            <span th:text="${stats.avgCandidatesPerVacancy}"></span></p>
+        <p>Нарушения SLA:
+            <span th:text="${stats.slaViolationsCount}"></span></p>
+    </div>
+
+    <!-- График распределения по стадиям -->
+    <div class="stats-block">
+        <h3>Распределение по стадиям</h3>
+        <canvas id="stageChart"></canvas>
+    </div>
+
+    <!-- График распределения по источникам -->
+    <div class="stats-block">
+        <h3>Распределение по источникам</h3>
+        <canvas id="sourceChart"></canvas>
+    </div>
+
+    <!-- Таблица среднего времени -->
+    <div class="stats-block">
+        <h3>Среднее время на стадии (часы)</h3>
+        <table>
+            <tr th:each="entry : ${stats.avgTimePerStage}">
+                <td th:text="${#strings.capitalize(
+                          #strings.replace(entry.key.name(), '_', ' ').toLowerCase())}">
+                </td>
+                <td th:text="${entry.value}"></td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Отрисовка графиков с помощью Chart.js
+    function renderChart(ctx, labels, data, title) {
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: [
+                        '#3498db', '#2ecc71', '#e74c3c',
+                        '#9b59b6', '#f1c40f', '#1abc9c'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: { display: true, text: title }
+                }
+            }
+        });
+    }
+
+    // Для стадий
+    const stageCtx = document.getElementById('stageChart').getContext('2d');
+    const stageLabels = [[${T(com.myproject.hrmonitor.entity.Stage).values()}]];
+    const stageData = [[${stats.stageDistribution.values()}]];
+    renderChart(stageCtx, stageLabels, stageData, 'Стадии');
+
+    // Для источников
+    const sourceCtx = document.getElementById('sourceChart').getContext('2d');
+    const sourceLabels = [[${stats.sourceDistribution.keySet()}]];
+    const sourceData = [[${stats.sourceDistribution.values()}]];
+    renderChart(sourceCtx, sourceLabels, sourceData, 'Источники');
+</script>
+</body>
+</html>

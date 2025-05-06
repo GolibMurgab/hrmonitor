@@ -34,4 +34,7 @@ public class Resume {
 
     @Transient
     private String slaTimeDisplay;
+
+    @Transient
+    private LocalDateTime slaDeadline;
 }

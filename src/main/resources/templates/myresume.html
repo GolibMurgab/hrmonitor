@@ -169,7 +169,7 @@
 
         .stage-container form {
             width: 100%;
-            margin: 0; /* Убираем отступы формы */
+            margin: 0;
             padding: 0;
             display: flex;
             justify-content: normal;
@@ -179,7 +179,7 @@
             padding: 8px 12px;
             width: 100%;
             box-sizing: border-box;
-            display: block; /* Добавлено вместо flex-свойств */
+            display: block;
             background: #2ecc71;
             color: white;
             border: none;
@@ -187,6 +187,68 @@
             cursor: pointer;
             font-size: 0.9em;
             text-align: center;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .action-buttons button {
+            flex: 1;
+            padding: 8px 12px;
+            font-size: 0.9em;
+        }
+
+        .filters-container {
+          margin: 20px 0;
+          padding: 15px;
+          background-color: #f8f9fa;
+          border-radius: 5px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .filters-row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 15px;
+          align-items: flex-end;
+        }
+
+        .filter-group {
+          display: flex;
+          flex-direction: column;
+          min-width: 150px;
+        }
+
+        .filter-group label {
+          margin-bottom: 5px;
+          font-weight: 500;
+        }
+
+        .form-control {
+          padding: 8px 12px;
+          border: 1px solid #ced4da;
+          border-radius: 4px;
+        }
+
+        .btn {
+          padding: 8px 16px;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+
+        .btn-primary {
+          background-color: #007bff;
+          color: white;
+          border: none;
+        }
+
+        .btn-secondary {
+          background-color: #6c757d;
+          color: white;
+          border: none;
         }
     </style>
 </head>
@@ -230,7 +292,46 @@
 
     <div th:if="${param.error}" class="error-message">Ошибка, попробуйте снова</div>
 
-    <!--    Списоке с резюме-->
+
+    <!--    Фильтры-->
+    <div class="filters-container">
+        <h3>Фильтры и сортировка</h3>
+
+        <form th:action="@{/hr/resume}" method="get" class="filters-container">
+            <!-- Фильтр по стадии -->
+            <select name="stage" class="form-control">
+                <option value="">Все стадии</option>
+                <option th:each="stage : ${T(com.myproject.hrmonitor.entity.Stage).values()}"
+                        th:value="${stage}"
+                        th:text="${#strings.capitalize(#strings.replace(stage.name(), '_', ' ').toLowerCase())}"
+                        th:selected="${param.stage == stage.name()}">
+                </option>
+            </select>
+
+            <!-- Фильтр по вакансии -->
+            <select name="vacancyId" class="form-control">
+                <option value="">Все вакансии</option>
+                <option th:each="vacancy : ${vacancies}"
+                        th:value="${vacancy.id}"
+                        th:text="${vacancy.title}"
+                        th:selected="${param.vacancyId == vacancy.id}">
+                </option>
+            </select>
+
+            <!-- Сортировка -->
+            <select name="sortBy" class="form-control">
+                <option value="created-asc" th:selected="${param.sortBy == 'created-asc'}">По дате создания (сначала старые)</option>
+                <option value="created-desc" th:selected="${param.sortBy == 'created-desc'}">По дате создания (сначала новые)</option>
+                <option value="sla-asc" th:selected="${param.sortBy == 'sla-asc'}">По сроку SLA (сначала ближайшие)</option>
+                <option value="sla-desc" th:selected="${param.sortBy == 'sla-desc'}">По сроку SLA (сначала дальние)</option>
+            </select>
+
+            <button type="submit" class="btn btn-primary">Применить</button>
+            <a th:href="@{/hr/resume}" class="btn btn-secondary">Сбросить</a>
+        </form>
+    </div>
+
+    <!-- Список с резюме -->
     <div class="resume-list">
         <h2>Список резюме</h2>
 
@@ -246,6 +347,7 @@
                         <span th:text="${#temporals.format(resume.created, 'dd.MM.yyyy HH:mm')}"></span>
                     </div>
                     <div>Вакансия: <span th:text="${resume.vacancy.title}"></span></div>
+                    <div>Ссылка: <span th:text="${resume.link}"></span></div>
                 </div>
 
                 <div class="sla-status"
@@ -258,20 +360,94 @@
 
             <div class="stage-container">
                 <span class="resume-stage"
-                      th:text="${#strings.capitalize(#strings.replace(resume.currentStage.stage.name(), '_', ' ').toLowerCase())}"
-                      th:classappend="'stage-' + ${#strings.toLowerCase(#strings.replace(resume.currentStage.stage.name(), '_', '-'))}">
+                      th:text="${#strings.capitalize(#strings.replace(resume.currentStage.sla.stage.name(), '_', ' ').toLowerCase())}"
+                      th:classappend="'stage-' + ${#strings.toLowerCase(#strings.replace(resume.currentStage.sla.stage.name(), '_', '-'))}">
                 </span>
                 <form th:action="@{/hr/resume/{id}/next-stage(id=${resume.id})}" method="post">
                     <button type="submit" class="assign-btn"
-                            th:if="${resume.currentStage.stage.next() != null}"
+                            th:if="${resume.currentStage.sla.stage.next() != null}"
                             th:text="'Перейти в ' + ${#strings.replace(
-                                resume.currentStage.stage.next().name(),
+                                resume.currentStage.sla.stage.next().name(),
                                         '_', ' ').toLowerCase()}">
                     </button>
                 </form>
+
+                <div class="action-buttons">
+                    <button class="edit-btn"
+                            th:attr="data-id=${resume.id},
+                                    data-candidate-name=${resume.candidateName},
+                                    data-source=${resume.source},
+                                    data-link=${resume.link},
+                                    data-vacancy-id=${resume.vacancy.id}"
+                            onclick="handleEditClick(this)">Редактировать</button>
+
+                    <form th:action="@{/hr/resume/{id}(id=${resume.id})}" method="post" style="display:inline-block; margin:0;">
+                        <input type="hidden" name="_method" value="DELETE" />
+                        <button type="submit" class="delete-btn">Удалить</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Модалка редактирования -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <h2>Редактировать резюме</h2>
+        <form id="editForm" method="post" th:object="${resumeDto}">
+            <input type="hidden" name="_method" value="PUT" />
+            <input type="hidden" name="id" id="editId" th:field="*{id}" />
+
+            <div class="form-group">
+                <label>Вакансия:</label>
+                <select name="vacancyId" id="editVacancyId" class="form-control" required>
+                    <option value="" disabled>Выберите вакансию</option>
+                    <option th:each="vacancy : ${vacancies}"
+                            th:value="${vacancy.id}"
+                            th:text="${vacancy.title}"></option>
+                </select>
+            </div>
+
+            <input type="text" name="candidateName" id="editCandidateName" placeholder="Имя кандидата" required />
+            <input type="text" name="source" id="editSource" placeholder="Источник" required />
+            <input type="text" name="link" id="editLink" placeholder="Url" />
+
+            <button type="submit">Сохранить</button>
+            <button type="button" onclick="closeEditModal()">Отмена</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function handleEditClick(button) {
+        const id = button.getAttribute('data-id');
+        const candidateName = button.getAttribute('data-candidate-name');
+        const source = button.getAttribute('data-source');
+        const link = button.getAttribute('data-link');
+        const vacancyId = button.getAttribute('data-vacancy-id');
+
+        document.getElementById('editId').value = id;
+        document.getElementById('editCandidateName').value = candidateName;
+        document.getElementById('editSource').value = source;
+        document.getElementById('editLink').value = link;
+        document.getElementById('editVacancyId').value = vacancyId;
+
+        document.getElementById('editForm').action = '/hr/resume/' + id;
+        document.getElementById('editModal').style.display = 'block';
+    }
+
+    function closeEditModal() {
+        document.getElementById('editModal').style.display = 'none';
+    }
+
+    // Закрытие модального окна при клике вне его
+    window.onclick = function(event) {
+        const modal = document.getElementById('editModal');
+        if (event.target === modal) {
+            closeEditModal();
+        }
+    }
+</script>
 </body>
 </html>
