@@ -64,13 +64,24 @@
 <body>
 <nav class="sidebar">
     <h2>Меню</h2>
-    <a th:href="@{/hr/resume}" class="nav-link">Резюме</a>
-    <a th:href="@{/hr/statistics}" class="nav-link">Статистика</a>
+    <a th:href="@{/team-lead-hr/dashboard}" class="nav-link">Мои Hr</a>
+    <a th:href="@{/team-lead-hr/sla}" class="nav-link">Настройки SLA</a>
+    <a th:href="@{/team-lead-hr/statistics}" class="nav-link">Статистика</a>
+    <a th:href="@{/team-lead-hr/vacancies}" class="nav-link">Вакансии</a>
     <a th:href="@{/logout}" class="nav-link">Выйти</a>
 </nav>
 
 <div class="main-content">
-    <h2>Ваша статистика</h2>
+    <h2>Выбрать HR</h2>
+    <form th:action="@{/team-lead-hr/showStat}" method="post" th:object="${hrDto}">
+        <select th:field="*{username}" required>
+            <option value="" disabled selected>Выберите HR</option>
+            <option th:each="hr : ${hrs}"
+                    th:value="${hr.username}"
+                    th:text="${hr.username}"></option>
+        </select>
+        <button type="submit">Выбрать</button>
+    </form>
 
     <div class="stat-block">
         <h3>Среднее время нахождения в стадии (часы)</h3>

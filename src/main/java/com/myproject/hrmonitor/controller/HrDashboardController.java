@@ -1,5 +1,6 @@
 package com.myproject.hrmonitor.controller;
 
+import com.myproject.hrmonitor.dto.StatisticsDto;
 import com.myproject.hrmonitor.service.HrService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;

@@ -70,7 +70,6 @@
 <div class="registration-form">
     <h2>Регистрация нового пользователя</h2>
 
-    <!-- Сообщения об ошибках -->
     <div th:if="${errorMessage}" class="error-message" th:text="${errorMessage}"></div>
 
     <form th:action="@{/registration}" method="post" th:object="${user}">

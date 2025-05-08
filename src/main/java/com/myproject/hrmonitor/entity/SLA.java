@@ -12,6 +12,7 @@ public class SLA {
     @Enumerated(EnumType.STRING)
     private Stage stage;
 
+    @Convert(converter = DurationToSecondsConverter.class)
     @Column(nullable = false)
     private Duration duration;
 

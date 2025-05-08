@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Map;
 
 public interface ResumeRepository extends JpaRepository<Resume, Long>, JpaSpecificationExecutor<Resume> {
     List<Resume> findAllByHr(User hr);
@@ -21,4 +22,14 @@ public interface ResumeRepository extends JpaRepository<Resume, Long>, JpaSpecif
                                        @Param("stage") Stage stage,
                                        @Param("vacancyId") Long vacancyId,
                                        Sort sort);
+
+    @Query("SELECT r.currentStage.sla.stage, COUNT(r) FROM resume r "
+            + "WHERE r.hr = :hr GROUP BY r.currentStage.sla.stage")
+    List<Object[]> countByStagePerHr(@Param("hr") User hr);
+
+    @Query("SELECT r.source, COUNT(r) FROM resume r "
+            + "WHERE r.hr = :hr GROUP BY r.source")
+    List<Object[]> countBySourcePerHr(@Param("hr") User hr);
+
+    Long countByHr(User hr);
 }
